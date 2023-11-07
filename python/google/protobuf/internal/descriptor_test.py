@@ -20,6 +20,7 @@ from google.protobuf import text_format
 from google.protobuf.internal import api_implementation
 from google.protobuf.internal import legacy_features_pb2
 from google.protobuf.internal import test_util
+from google.protobuf.internal import testing_refleaks
 
 from google.protobuf.internal import _parameterized
 from google.protobuf import unittest_custom_options_pb2
@@ -60,6 +61,7 @@ service DescriptorTestService {
 warnings.simplefilter('error', DeprecationWarning)
 
 
+@testing_refleaks.TestCase
 class DescriptorTest(unittest.TestCase):
 
   def setUp(self):
@@ -1218,11 +1220,7 @@ class MakeDescriptorTest(unittest.TestCase):
                        json_names[index])
 
 
-# TODO Add _GetFeatures for upb and C++.
-@unittest.skipIf(
-    api_implementation.Type() != 'python',
-    'Features field is only available with the pure python implementation',
-)
+@testing_refleaks.TestCase
 class FeaturesTest(_parameterized.TestCase):
 
   @_parameterized.named_parameters([
@@ -1369,11 +1367,7 @@ def SetTestFeature(proto, value):
   ].int_multiple_feature = value
 
 
-# TODO Add _GetFeatures for upb and C++.
-@unittest.skipIf(
-    api_implementation.Type() != 'python',
-    'Features field is only available with the pure python implementation',
-)
+@testing_refleaks.TestCase
 class FeatureInheritanceTest(unittest.TestCase):
 
   def setUp(self):
