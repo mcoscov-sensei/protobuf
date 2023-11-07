@@ -3222,8 +3222,19 @@ const internal::TcParseTableBase* Reflection::CreateTcParseTableReflectionOnly()
   // `operator delete` unconditionally.
   void* p = ::operator new(sizeof(Table));
   auto* full_table = ::new (p)
-      Table{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, schema_.default_instance_, nullptr},
+      Table{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, schema_.default_instance_, nullptr
+#ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+             ,
+             nullptr
+#endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+            },
             {{{&internal::TcParser::ReflectionParseLoop, {}}}}};
+#ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+  // We'll prefetch `to_prefetch->to_prefetch` unconditionally to avoid
+  // branches. Here we don't know which field is the hottest, so set the pointer
+  // to itself to avoid nullptr.
+  full_table->header.to_prefetch = &full_table->header;
+#endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   ABSL_DCHECK_EQ(static_cast<void*>(&full_table->header),
                  static_cast<void*>(full_table));
   return &full_table->header;
@@ -3453,7 +3464,18 @@ const internal::TcParseTableBase* Reflection::CreateTcParseTable() const {
       static_cast<uint16_t>(table_info.aux_entries.size()),
       aux_offset,
       schema_.default_instance_,
-      &internal::TcParser::ReflectionFallback};
+      &internal::TcParser::ReflectionFallback
+#ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+      ,
+      nullptr
+#endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  };
+#ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+  // We'll prefetch `to_prefetch->to_prefetch` unconditionally to avoid
+  // branches. Here we don't know which field is the hottest, so set the pointer
+  // to itself to avoid nullptr.
+  res->to_prefetch = res;
+#endif  // PROTOBUF_PREFETCH_PARSE_TABLE
 
   // Now copy the rest of the payloads
   PopulateTcParseFastEntries(table_info, res->fast_entry(0));

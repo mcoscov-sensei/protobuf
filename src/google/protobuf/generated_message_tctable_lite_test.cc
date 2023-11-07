@@ -83,6 +83,7 @@ TEST(FastVarints, NameHere) {
           offsetof(decltype(parse_table), field_names),  // no aux_entries
           nullptr,                                       // default instance
           FastParserGaveUp,                              // fallback
+          nullptr,                                       // to_prefetch
       },
       // Fast Table:
       {{
@@ -274,6 +275,7 @@ TEST(IsEntryForFieldNumTest, Matcher) {
           0, 0,        // num_aux_entries, aux_offset,
           nullptr,     // default instance
           nullptr,     // fallback function
+          nullptr,     // to_prefetch
       }};
   // clang-format on
   int table_field_numbers[] = {1, 2, 3};
@@ -342,6 +344,7 @@ TEST_F(FindFieldEntryTest, SequentialFieldRange) {
           0, 0,        // num_aux_entries, aux_offset,
           nullptr,     // default instance
           {},          // fallback function
+          nullptr,     // to_prefetch
       },
       {},  // fast_entries
       // field_lookup_table for 2, 3, 4, 5, 111:
@@ -382,6 +385,7 @@ TEST_F(FindFieldEntryTest, SmallScanRange) {
           0, 0,        // num_aux_entries, aux_offset,
           nullptr,     // default instance
           {},          // fallback function
+          nullptr,     // to_prefetch
       },
       {},  // fast_entries
       // field_lookup_table for 1, 3, 4, 5, 7, 111:
@@ -430,6 +434,7 @@ TEST_F(FindFieldEntryTest, BinarySearchRange) {
           0, 0,        // num_aux_entries, aux_offset,
           nullptr,     // default instance
           {},          // fallback function
+          nullptr,     // to_prefetch
       },
       {},  // fast_entries
       // field_lookup_table for 1, 3, 4, 5, 6, 8, 9, 11, 12, 70
@@ -475,6 +480,7 @@ TEST_F(FindFieldEntryTest, OutOfRange) {
           offsetof(decltype(table), field_names),  // no aux_entries
           nullptr,     // default instance
           {},          // fallback function
+          nullptr,     // to_prefetch
       },
       {},  // fast_entries
       {{// field lookup table
@@ -525,6 +531,7 @@ TEST_F(FindFieldEntryTest, EmptyMessage) {
           offsetof(TableType, field_names),
           nullptr,     // default instance
           nullptr,     // fallback function
+          nullptr,     // to_prefetch
       },
       {},  // fast_entries
       {{// empty field lookup table
@@ -575,6 +582,7 @@ const TcParseTable<5, 134, 5, 2176, 55> test_all_types_table = {
         offsetof(decltype(test_all_types_table), aux_entries),
         nullptr,     // default instance
         nullptr,     // fallback function
+        nullptr,     // to_prefetch
     },
     {{
         // tail-call table
