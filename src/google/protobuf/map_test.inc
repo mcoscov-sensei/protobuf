@@ -183,6 +183,11 @@ struct MapTestPeer {
   }
 
   template <typename T>
+  static size_t NumBuckets(T& map) {
+    return map.num_buckets_;
+  }
+
+  template <typename T>
   static size_t BucketNumber(T& map, typename T::key_type key) {
     return map.BucketNumber(key);
   }
@@ -1276,7 +1281,7 @@ TEST_F(MapImplTest, CopyAssignMapIterator) {
 }
 
 TEST_F(MapImplTest, SpaceUsed) {
-  constexpr size_t kMinCap = 8;
+  constexpr size_t kMinCap = 16 / sizeof(void*);
 
   Map<int32_t, int32_t> m;
   // An newly constructed map should have no space used.
@@ -1347,7 +1352,8 @@ bool MapOrderingIsRandom(int a, int b) {
 TEST_F(MapImplTest, RandomOrdering) {
   for (int i = 0; i < 10; ++i) {
     for (int j = i + 1; j < 10; ++j) {
-      EXPECT_TRUE(MapOrderingIsRandom(i, j))
+      // XXX Change back
+      ASSERT_TRUE(MapOrderingIsRandom(i, j))
           << "Map with keys " << i << " and " << j
           << " has deterministic ordering";
     }
@@ -1360,10 +1366,9 @@ void TestTransparent(const Key& key, const Key& miss_key) {
   const auto& cm = m;
 
   m.insert({"ABC", 1});
-
-  const auto abc_it = m.begin();
-
   m.insert({"DEF", 2});
+
+  const auto abc_it = m.find("ABC");
 
   using testing::Pair;
   using testing::UnorderedElementsAre;

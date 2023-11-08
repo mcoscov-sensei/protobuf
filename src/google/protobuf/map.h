@@ -130,6 +130,8 @@ class MapAllocator {
   void deallocate(pointer p, size_type n) {
     if (arena_ == nullptr) {
       internal::SizedDelete(p, n * sizeof(value_type));
+    } else {
+      arena_->ReturnArrayMemory(p, n * sizeof(value_type));
     }
   }
 
@@ -536,7 +538,8 @@ class PROTOBUF_EXPORT UntypedMapBase {
   UntypedMapBase& operator=(const UntypedMapBase&) = delete;
 
  protected:
-  enum { kMinTableSize = 8 };
+  // 16 bytes is the minimum useful size for the array cache in the arena.
+  enum { kMinTableSize = 16 / sizeof(void*) };
 
  public:
   Arena* arena() const { return this->alloc_.arena(); }
@@ -669,8 +672,16 @@ class PROTOBUF_EXPORT UntypedMapBase {
     // We use the multiplication method to determine the bucket number from
     // the hash value. The constant kPhi (suggested by Knuth) is roughly
     // (sqrt(5) - 1) / 2 * 2^64.
+    // Use int128 on 64-bit machines since it is cheap to do a 64*64->128
+    // multiplication and the high 64 are in a register so the >> is free.
+    using MultT =
+        std::conditional_t<sizeof(size_t) == 8, absl::uint128, uint64_t>;
+    MultT m = h;
     constexpr uint64_t kPhi = uint64_t{0x9e3779b97f4a7c15};
-    return (MultiplyWithOverflow(kPhi, h) >> 32) & (num_buckets_ - 1);
+    m *= kPhi;
+    map_index_t res = static_cast<map_index_t>((m >> (sizeof(m) / 2 * 8)) ^ m);
+
+    return res & (num_buckets_ - 1);
   }
 
   TableEntryPtr* CreateEmptyTable(map_index_t n) {

@@ -65,6 +65,8 @@ struct ArenaTestPeer;        // defined in arena_test_util.h
 class InternalMetadata;      // defined in metadata_lite.h
 class LazyField;             // defined in lazy_field.h
 class EpsCopyInputStream;    // defined in parse_context.h
+template <typename>
+class MapAllocator;          // defined in map.h
 class RepeatedPtrFieldBase;  // defined in repeated_ptr_field.h
 class TcParser;              // defined in generated_message_tctable_impl.h
 
@@ -659,6 +661,9 @@ class PROTOBUF_EXPORT PROTOBUF_ALIGNAS(8) Arena final {
   template <typename>
   friend class RepeatedField;                   // For ReturnArrayMemory
   friend class internal::RepeatedPtrFieldBase;  // For ReturnArrayMemory
+  template <typename>
+  friend class internal::MapAllocator;  // For ReturnArenaMemory
+
   friend struct internal::ArenaTestPeer;
 };
 
