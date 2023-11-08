@@ -84,6 +84,11 @@ bool upb_FieldDef_HasOptions(const upb_FieldDef* f) {
   return f->opts != (void*)kUpbDefOptDefault;
 }
 
+const UPB_DESC(FeatureSet) *
+    upb_FieldDef_ResolvedFeatures(const upb_FieldDef* f) {
+  return f->resolved_features;
+}
+
 const char* upb_FieldDef_FullName(const upb_FieldDef* f) {
   return f->full_name;
 }
@@ -628,6 +633,25 @@ static void _upb_FieldDef_Create(upb_DefBuilder* ctx, const char* prefix,
     }
   }
 
+  if (UPB_DESC(FieldDescriptorProto_has_oneof_index)(field_proto)) {
+    int oneof_index = UPB_DESC(FieldDescriptorProto_oneof_index)(field_proto);
+
+    if (!m) {
+      _upb_DefBuilder_Errf(ctx, "oneof field (%s) has no containing msg",
+                           f->full_name);
+    }
+
+    if (oneof_index >= upb_MessageDef_OneofCount(m)) {
+      _upb_DefBuilder_Errf(ctx, "oneof_index out of range (%s)", f->full_name);
+    }
+
+    upb_OneofDef* oneof = (upb_OneofDef*)upb_MessageDef_Oneof(m, oneof_index);
+    f->scope.oneof = oneof;
+    parent_features = upb_OneofDef_ResolvedFeatures(oneof);
+
+    _upb_OneofDef_Insert(ctx, oneof, f, name.data, name.size);
+  }
+
   f->resolved_features = _upb_DefBuilder_DoResolveFeatures(
       ctx, parent_features, unresolved_features, implicit);
 
@@ -691,26 +715,10 @@ static void _upb_FieldDef_Create(upb_DefBuilder* ctx, const char* prefix,
   f->sub.unresolved = field_proto;
 
   if (UPB_DESC(FieldDescriptorProto_has_oneof_index)(field_proto)) {
-    int oneof_index = UPB_DESC(FieldDescriptorProto_oneof_index)(field_proto);
-
     if (upb_FieldDef_Label(f) != kUpb_Label_Optional) {
       _upb_DefBuilder_Errf(ctx, "fields in oneof must have OPTIONAL label (%s)",
                            f->full_name);
     }
-
-    if (!m) {
-      _upb_DefBuilder_Errf(ctx, "oneof field (%s) has no containing msg",
-                           f->full_name);
-    }
-
-    if (oneof_index >= upb_MessageDef_OneofCount(m)) {
-      _upb_DefBuilder_Errf(ctx, "oneof_index out of range (%s)", f->full_name);
-    }
-
-    upb_OneofDef* oneof = (upb_OneofDef*)upb_MessageDef_Oneof(m, oneof_index);
-    f->scope.oneof = oneof;
-
-    _upb_OneofDef_Insert(ctx, oneof, f, name.data, name.size);
   }
 
   f->has_presence =
@@ -798,6 +806,20 @@ upb_FieldDef* _upb_FieldDefs_New(upb_DefBuilder* ctx, int n,
     upb_FieldDef* f = &defs[i];
 
     _upb_FieldDef_CreateNotExt(ctx, prefix, parent_features, protos[i], m, f);
+    /*
+    const UPB_DESC(FeatureSet*) field_parent_features = parent_features;
+    // For fields in a oneof, inherit features from that oneof.
+    if (UPB_DESC(FieldDescriptorProto_has_oneof_index)(protos[i])) {
+      int oneof_index = UPB_DESC(FieldDescriptorProto_oneof_index)(protos[i]);
+      if (oneof_index >= 0 && oneof_index < upb_MessageDef_OneofCount(m)) {
+        field_parent_features =
+            upb_OneofDef_ResolvedFeatures(upb_MessageDef_Oneof(m, oneof_index));
+      }
+    }
+
+    _upb_FieldDef_CreateNotExt(ctx, prefix, field_parent_features, protos[i], m,
+                               f);
+    */
     f->index_ = i;
     if (!ctx->layout) {
       // Speculate that the def fields are sorted.  We will always sort the

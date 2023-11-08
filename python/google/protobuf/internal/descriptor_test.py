@@ -1218,11 +1218,6 @@ class MakeDescriptorTest(unittest.TestCase):
                        json_names[index])
 
 
-# TODO Add _GetFeatures for upb and C++.
-@unittest.skipIf(
-    api_implementation.Type() != 'python',
-    'Features field is only available with the pure python implementation',
-)
 class FeaturesTest(_parameterized.TestCase):
 
   @_parameterized.named_parameters([
@@ -1369,11 +1364,6 @@ def SetTestFeature(proto, value):
   ].int_multiple_feature = value
 
 
-# TODO Add _GetFeatures for upb and C++.
-@unittest.skipIf(
-    api_implementation.Type() != 'python',
-    'Features field is only available with the pure python implementation',
-)
 class FeatureInheritanceTest(unittest.TestCase):
 
   def setUp(self):
