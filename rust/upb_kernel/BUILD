@@ -10,5 +10,6 @@ cc_library(
     deps = [
         "//upb:collections",
         "//upb:mem",
+        "//upb:reflection",
     ],
 )

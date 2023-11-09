@@ -171,6 +171,10 @@ impl<'msg> MutatorMessageRef<'msg> {
         MutatorMessageRef { msg: msg.msg, _phantom: PhantomData }
     }
 
+    pub fn new_raw(_private: Private, msg: RawMessage) -> Self {
+        MutatorMessageRef { msg, _phantom: PhantomData }
+    }
+
     pub fn msg(&self) -> RawMessage {
         self.msg
     }
@@ -215,6 +219,12 @@ pub struct RepeatedFieldInner<'msg> {
 impl<'msg, T: ?Sized> RepeatedField<'msg, T> {
     pub fn from_inner(_private: Private, inner: RepeatedFieldInner<'msg>) -> Self {
         RepeatedField { inner, _phantom: PhantomData }
+    }
+    pub fn raw(&self) -> RawRepeatedField {
+        self.inner.raw
+    }
+    pub fn inner(&self) -> RepeatedFieldInner<'msg> {
+        self.inner
     }
 }
 

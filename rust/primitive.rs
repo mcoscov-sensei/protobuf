@@ -122,7 +122,9 @@ macro_rules! impl_singular_primitives {
                       unsafe { (s.inner).set(self) };
                   }
                   PrimitiveMut::Repeated(mut r, i) => {
-                      r.set(i, self);
+                    //   <$t as RepeatedScalarOps>::set(r.inner.inner.raw, i, self);
+                      r.inner.set(i, self);
+                    //   r.set(i, self);
                   }
                 }
               }
